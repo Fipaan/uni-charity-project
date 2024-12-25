@@ -1,5 +1,6 @@
 
 import java.util.ArrayList;
+import java.util.Comparator;
 
 public class Donation {
 	private String name;
@@ -41,7 +42,7 @@ public class Donation {
 				this.donors.get(i).donate(price);
 				this.collected += price;
 				this.reached_goal = this.collected > this.goal;
-				return name;
+			return name;
 			}
 		}
 		return null;
@@ -59,7 +60,12 @@ public class Donation {
 		
 		System.out.printf("%sDonors: %d%s\n", prefix, this.donors.size(), suffix);
 		for(int i = 0; i < this.donors.size(); ++i) {
-			this.donors.get(i).print(prefix + "  ", suffix);
+			if(this.donors.get(i).stringRepresentation() == "Company") {
+				Company company = (Company) this.donors.get(i);
+				company.print(prefix + "  ", suffix);
+			} else {
+				this.donors.get(i).print(prefix + "  ", suffix);
+			}
 		}
 		System.out.println("---------------------------------------"); 
 	}
@@ -88,5 +94,42 @@ public class Donation {
 	}
 	public String who_donated_less(String first_donor, String second_donor) {
 		return this.who_donated_less(first_donor, second_donor, 0.0f);
+	}
+	public ArrayList<Donor> filterByDonatedMore(float minValue) {
+		ArrayList<Donor> result = new ArrayList<Donor>();
+		for(Donor donor: this.donors) {
+			if(donor.getDonated() >= minValue) {
+				result.add(donor);
+			}
+		}
+		return result;
+	}
+	public ArrayList<Person> searchByDonor(String name) {
+		ArrayList<Person> result = new ArrayList<Person>();
+		for(int i = 0; i < this.donors.size(); ++i) {
+			Donor donor = this.donors.get(i);
+			if(donor.stringRepresentation() == "Company") {
+				Person person = donor.getPerson(name);
+				if(person.getDonated() != 0) {
+					boolean check = false;
+					for(int j = 0; j < result.size(); ++j) {
+						if(result.get(i).getName() == name) {
+							result.get(i).setDonated(result.get(i).getDonated() + person.getDonated());
+							check = true;
+							break;
+						}
+					}
+					if(!check) {
+						result.add(person);
+					}
+				}
+			} else {
+				result.add(new Person(donor.getName(), donor.getDonated()));
+			}
+		}
+		return result;
+	}
+	public void sortDonorsByName() {
+		this.donors.sort(Comparator.comparing(Donor::getName));
 	}
 }

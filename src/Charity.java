@@ -35,13 +35,22 @@ public class Charity {
 		System.out.println("=======================================");
 	}
 	public void addDonor(String donation_name, String donor_name, float donated) {
-		this.getDonation(donation_name).addDonor(new Donor(donor_name, donated));;
+		this.getDonation(donation_name).addDonor(new Person(donor_name, donated));;
 	}
 	public void donate(String donation_name, String donor_name, float donated) {
 		if(this.getDonation(donation_name).getDonor(donor_name) != null) {
-			this.getDonation(donation_name).donate(donor_name, donated);;
+			this.getDonation(donation_name).donate(donor_name, donated);
 		} else {
 			this.addDonor(donation_name, donor_name, donated);
 		}
+	}
+	public void addCompany(String donation_name, Company company) {
+		this.getDonation(donation_name).addDonor(company);
+	}
+	public void donate(String donation_name, Company company, String donor_name, float donated) {
+		if(this.getDonation(donation_name).getDonor(company.getName()) == null) {
+			this.addCompany(donation_name, company);
+		}
+		this.getDonation(donation_name).getDonor(company.getName()).donate(donor_name, donated);;
 	}
 }
