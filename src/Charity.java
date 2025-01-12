@@ -40,6 +40,15 @@ public class Charity {
 		}
 		throw new RuntimeException("Donation not found");
 	}
+	public void removeDonation(String name) throws RuntimeException {
+		for(int i = 0; i < this.donations.size(); ++i) {
+			if(Global.compareStrings(this.donations.get(i).getName(), name)) {
+				this.donations.remove(i);
+				return;
+			}
+		}
+		throw new RuntimeException("Donation not found");
+	}
 	public void print() {
 		System.out.println("=======================================");
 		System.out.printf("Charities: %d\n", this.donations.size());
@@ -50,7 +59,7 @@ public class Charity {
 	}
 	public void addDonor(String donation_name, String donor_name, float donated) {
 		this.getDonation(donation_name).addDonor(new Donor(donor_name, donated));;
-	}
+	}	
 	public void donate(String donation_name, String donor_name, float donated) {
 		if(this.getDonation(donation_name).getDonor(donor_name) != null) {
 			this.getDonation(donation_name).donate(donor_name, donated);

@@ -36,6 +36,22 @@ public class Donation {
 		}
 		return null;
 	}
+	public void removeDonor(String name) {
+		for(int i = 0; i < donors.size(); ++i) {
+			if(Global.compareStrings(donors.get(i).getName(), name)) {
+				donors.remove(i);
+				return;
+			}
+		}
+	}
+	public void setDonor(String donor_name, Donor new_donor) {
+		for(int i = 0; i < this.donors.size(); ++i) {
+			if(this.donors.get(i).getName() == donor_name) {
+				this.donors.set(i, new_donor);
+				return;
+			}
+		}
+	}
 	public Donation(String name, float goal) {
 		this.name = name;
 		this.goal = goal;

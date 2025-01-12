@@ -19,8 +19,41 @@ public class DatabaseLinker {
 			e.printStackTrace();
 			System.exit(1);
 		}
-    }	
-	public static int insert_employee(int donation_id, int company_id, Employee employee) throws SQLException {
+    }
+	public static int remove_donor(int donor_id) throws SQLException {
+		String sql = "DELETE FROM donor WHERE donor_id = ?";
+		PreparedStatement stmt = connection.prepareStatement(sql);
+		stmt.setInt(1, donor_id);
+		int count = stmt.executeUpdate();
+		return count;
+	}
+	public static int remove_donor(String charity_name, String donation_name, String donor_name) throws SQLException {
+		String sql = "DELETE FROM donor WHERE name = ? AND donation_id = ? AND subclass != 'Employee'";
+		PreparedStatement stmt = connection.prepareStatement(sql);
+		stmt.setString(1, donor_name);
+		stmt.setInt(2, DatabaseLinker.get_donation_id(charity_name, donation_name));
+		int count = stmt.executeUpdate();
+		return count;
+	}
+	public static int remove_donation(int charity_id, String donation_name) throws SQLException {
+		String sql = "DELETE FROM donation WHERE name = ? AND charity_id = ?";
+		PreparedStatement stmt = connection.prepareStatement(sql);
+		stmt.setString(1, donation_name);
+		stmt.setInt(2, charity_id);
+		int count = stmt.executeUpdate();
+		return count;
+	}
+	public static int remove_donation(String charity_name, String donation_name) throws SQLException {
+		return DatabaseLinker.remove_donation(DatabaseLinker.get_charity_id(charity_name), donation_name);
+	}
+	public static int remove_charity(String name) throws SQLException {
+		String sql = "DELETE FROM charity WHERE name = ?";
+		PreparedStatement stmt = connection.prepareStatement(sql);
+		stmt.setString(1, name);
+		int count = stmt.executeUpdate();
+		return count;
+	}	
+	public static int upsert_employee(int donation_id, int company_id, Employee employee) throws SQLException {
 		String sql = "SELECT * FROM Employee WHERE name = ? AND donation_id = ? AND company_id = ?";
 		PreparedStatement stmt = DatabaseLinker.connection.prepareStatement(sql);
 		stmt.setString(1, employee.getName());
@@ -47,7 +80,7 @@ public class DatabaseLinker {
 		rs.next();
 		return rs.getInt("donor_id");
 	}
-	public static int insert_company(int donation_id, Company company) throws SQLException {
+	public static int upsert_company(int donation_id, Company company) throws SQLException {
 		String sql = "SELECT * FROM Donor WHERE name = ? AND donation_id = ?";
 		PreparedStatement stmt = DatabaseLinker.connection.prepareStatement(sql);
 		stmt.setString(1, company.getName());
@@ -56,18 +89,14 @@ public class DatabaseLinker {
 		ResultSet rs = stmt.executeQuery();
 		if (rs.next()) {
 			donor_id = rs.getInt("donor_id");
-			sql = "UPDATE Donor SET donation_id = ?, name = ?, donated = ?, subclass = ? WHERE donor_id = ? RETURNING donor_id";
-		} else {
-			sql = "INSERT INTO Donor (donation_id, name, donated, subclass) VALUES (?, ?, ?, ?) RETURNING donor_id";
+			DatabaseLinker.remove_donor(donor_id);
 		}
+		sql = "INSERT INTO Donor (donation_id, name, donated, subclass) VALUES (?, ?, ?, ?) RETURNING donor_id";
 		stmt = DatabaseLinker.connection.prepareStatement(sql);
 		stmt.setInt(1, donation_id);
 		stmt.setString(2, company.getName());
 		stmt.setFloat(3, company.getDonated());
 		stmt.setString(4, company.stringRepresentation());
-		if(donor_id != -1) {
-			stmt.setInt(5, donor_id);
-		}
 		rs = stmt.executeQuery();
 		rs.next();
 		if(donor_id == -1) {
@@ -82,14 +111,14 @@ public class DatabaseLinker {
 		rs.next();
 		int company_id = rs.getInt("company_id");
 		for(Employee employee : company.getEmployees()) {
-			DatabaseLinker.insert_employee(donation_id, company_id, employee);
+			DatabaseLinker.upsert_employee(donation_id, company_id, employee);
 		}
 		return donor_id;
 	}
-	public static int insert_donor(int donation_id, Donor donor) throws SQLException, ClassNotFoundException {
+	public static int upsert_donor(int donation_id, Donor donor) throws SQLException, ClassNotFoundException {
 		switch(donor.stringRepresentation()) {
 			case Donor.REPRESENTATION: break;
-			case Company.REPRESENTATION: return DatabaseLinker.insert_company(donation_id, (Company) donor);
+			case Company.REPRESENTATION: return DatabaseLinker.upsert_company(donation_id, (Company) donor);
 			case Employee.REPRESENTATION: throw new ClassNotFoundException("Employee shouldn't be on top layer");
 			default: throw new ClassNotFoundException("Unknown Donor type");
 		}
@@ -101,23 +130,19 @@ public class DatabaseLinker {
 		ResultSet rs = stmt.executeQuery();
 		if (rs.next()) {
 			donor_id = rs.getInt("donor_id");
-			sql = "UPDATE Donor SET donation_id = ?, name = ?, donated = ?, subclass = ? WHERE donor_id = ? RETURNING donor_id";	
-		} else {
-			sql = "INSERT INTO Donor (donation_id, name, donated, subclass) VALUES (?, ?, ?, ?) RETURNING donor_id";
+			DatabaseLinker.remove_donor(donor_id);	
 		}
+		sql = "INSERT INTO Donor (donation_id, name, donated, subclass) VALUES (?, ?, ?, ?) RETURNING donor_id";
 		stmt = DatabaseLinker.connection.prepareStatement(sql);
 		stmt.setInt(1, donation_id);
 		stmt.setString(2, donor.getName());
 		stmt.setFloat(3, donor.getDonated());
 		stmt.setString(4, donor.stringRepresentation());
-		if(donor_id != -1) {
-			stmt.setInt(5, donor_id);
-		}
 		rs = stmt.executeQuery();
 		rs.next();
 		return rs.getInt("donor_id");
 	}
-	public static int insert_donation(int charity_id, Donation donation) throws SQLException, ClassNotFoundException {
+	public static int upsert_donation(int charity_id, Donation donation) throws SQLException, ClassNotFoundException {
 		String sql = "SELECT * FROM Donation WHERE name = ? AND charity_id = ?";
 		PreparedStatement stmt = DatabaseLinker.connection.prepareStatement(sql);
 		stmt.setString(1, donation.getName());
@@ -126,28 +151,24 @@ public class DatabaseLinker {
 		ResultSet rs = stmt.executeQuery();
 		if (rs.next()) {
 			donation_id = rs.getInt("donation_id");
-			sql = "UPDATE Donation SET charity_id = ?, name = ?, collected = ?, goal = ?, reached_goal = ? WHERE donation_id = ? RETURNING donation_id";	
-		} else {
-			sql = "INSERT INTO Donation (charity_id, name, collected, goal, reached_goal) VALUES (?, ?, ?, ?, ?) RETURNING donation_id";
+			DatabaseLinker.remove_donation(charity_id, donation.getName());
 		}
+		sql = "INSERT INTO Donation (charity_id, name, collected, goal, reached_goal) VALUES (?, ?, ?, ?, ?) RETURNING donation_id";
 		stmt = DatabaseLinker.connection.prepareStatement(sql);
 		stmt.setInt(1, charity_id);
 		stmt.setString(2, donation.getName());
 		stmt.setFloat(3, donation.getCollected());
 		stmt.setFloat(4, donation.getGoal());
 		stmt.setBoolean(5, donation.isReachedGoal());
-		if(donation_id != -1) {
-			stmt.setInt(6, donation_id);
-		}
 		rs = stmt.executeQuery();
 		rs.next();
 		donation_id = rs.getInt("donation_id");
 		for (Donor donor : donation.getDonors()) {
-			DatabaseLinker.insert_donor(donation_id, donor);
+			DatabaseLinker.upsert_donor(donation_id, donor);
 		}
 		return donation_id;
 	}
-	public static int insert_charity(Charity charity) throws SQLException, ClassNotFoundException {
+	public static int upsert_charity(Charity charity) throws SQLException, ClassNotFoundException {
 		String sql = "SELECT * FROM Charity WHERE name = ?";
 		PreparedStatement stmt = DatabaseLinker.connection.prepareStatement(sql);
 		stmt.setString(1, charity.getName());
@@ -155,24 +176,20 @@ public class DatabaseLinker {
 		ResultSet rs = stmt.executeQuery();
 		if (rs.next()) {
 			charity_id = rs.getInt("charity_id");
-			sql = "UPDATE Charity SET name = ? WHERE charity_id = ? RETURNING charity_id";
-		} else {
-			sql = "INSERT INTO Charity (name) VALUES (?) RETURNING charity_id";
+			DatabaseLinker.remove_charity(charity.getName());
 		}
+		sql = "INSERT INTO Charity (name) VALUES (?) RETURNING charity_id";
 		stmt = DatabaseLinker.connection.prepareStatement(sql);
 		stmt.setString(1, charity.getName());
-		if(charity_id != -1) {
-			stmt.setInt(2, charity_id);
-		}
 		rs = stmt.executeQuery();
 		rs.next();
 		charity_id = rs.getInt("charity_id");
 		for (Donation donation : charity.getDonations()) {
-			DatabaseLinker.insert_donation(charity_id, donation);
+			DatabaseLinker.upsert_donation(charity_id, donation);
 		}
 		return charity_id;
 	}
-	public static int get_charity_id(String name) throws SQLException, ClassNotFoundException {
+	public static int get_charity_id(String name) throws SQLException {
 		String sql = "SELECT * FROM Charity WHERE name = ?";
 		PreparedStatement stmt = connection.prepareStatement(sql);
 		stmt.setString(1, name);
@@ -266,4 +283,16 @@ public class DatabaseLinker {
 		charity.setDonations(donations);
 		return charity;
 	}
+	public static int get_donation_id(int charity_id, String donation_name) throws SQLException {
+		String sql = "SELECT * FROM donation WHERE name = ? AND charity_id = ?";
+		PreparedStatement stmt = connection.prepareStatement(sql);
+		stmt.setString(1, donation_name);
+		stmt.setInt(2, charity_id);
+		ResultSet rs = stmt.executeQuery();
+		if(!rs.next()) return -1;
+		return rs.getInt("donation_id");
+	}
+	public static int get_donation_id(String charity_name, String donation_name) throws SQLException {
+		return DatabaseLinker.get_donation_id(DatabaseLinker.get_charity_id(charity_name), donation_name);
+	}	
 }
