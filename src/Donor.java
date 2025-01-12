@@ -1,10 +1,13 @@
 
 import java.util.Objects;
 
-public abstract class Donor {
+public class Donor {
+	public static final String REPRESENTATION = "Donor";
 	private String name;
 	private float donated;
-	public abstract String stringRepresentation();
+	public String stringRepresentation() {
+		return Donor.REPRESENTATION;
+	}
 	@Override
 	public String toString() {
 		return this.stringRepresentation() + ": " + this.name + ", donated: " + this.donated + "$";
@@ -30,7 +33,6 @@ public abstract class Donor {
 	public void setName(String name) {
 		this.name = name;
 	}
-	public abstract float getDonated(String name);
 	public float getDonated() {
 		return this.donated;
 	}
@@ -43,8 +45,9 @@ public abstract class Donor {
 	public void donate(String name, float money) {
 		System.out.println("ERROR: can't do this");
 	}
-	public abstract Person getPerson(String name);
-	public abstract void print(String prefix, String suffix);
+	public void print(String prefix, String suffix) {
+		System.out.printf("%s%s: %.2f$%s\n", prefix, this.getName(), this.getDonated(), suffix);
+	}
 	public void print(String prefix) {
 		this.print(prefix, "");
 	}

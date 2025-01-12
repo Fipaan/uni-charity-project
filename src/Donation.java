@@ -3,22 +3,26 @@ import java.util.ArrayList;
 import java.util.Comparator;
 
 public class Donation {
-	private String name;
 	private ArrayList<Donor> donors = new ArrayList<Donor>();
+	private String name;
 	private float collected = 0.0f;
 	private float goal;
 	private boolean reached_goal = false;
-	private String messageDonorNotFound() {
-		String result = "Donor not found";
-		if(this.donors.size() == 0) {
-			result += "\nNo donors in this Donation";
-		} else {
-			result += "\nPossible donors:";
-			for(int i = 0; i < this.donors.size(); ++i) {
-				result += "\n    '" + this.donors.get(i).getName() + "'";
-			}
-		}
-		return result;
+	public float getCollected() {
+		return this.collected;
+	}
+	public float getGoal() {
+		return this.goal;
+	}
+	public boolean isReachedGoal() {
+		return this.reached_goal;
+	}
+	public ArrayList<Donor> getDonors() {
+		return this.donors;
+	}
+	public void setDonors(ArrayList<Donor> donors) {
+		this.donors.clear();
+		this.donors.addAll(donors);
 	}
 	public void addDonor(Donor donor) {
 		this.collected += donor.getDonated();
@@ -26,7 +30,7 @@ public class Donation {
 	}
 	public Donor getDonor(String name) {
 		for(int i = 0; i < donors.size(); ++i) {
-			if(donors.get(i).getName() == name) {
+			if(Global.compareStrings(donors.get(i).getName(), name)) {
 				return donors.get(i);
 			}
 		}
@@ -36,6 +40,20 @@ public class Donation {
 		this.name = name;
 		this.goal = goal;
 	}
+	public Donation(String name, float collected, float goal, boolean reached_goal) {
+		this.name = name;
+		this.collected = collected;
+		this.goal = goal;
+		this.reached_goal = reached_goal;
+	}
+	public Donation(String name, float collected, float goal, boolean reached_goal, ArrayList<Donor> donors) {
+		this.name = name;
+		this.collected = collected;
+		this.goal = goal;
+		this.reached_goal = reached_goal;
+		this.setDonors(donors);;
+	}
+
 	public String donate(String name, float price) throws RuntimeException {
 		for(int i = 0; i < donors.size(); ++i) {
 			if(this.donors.get(i).getName() == name) {
@@ -56,7 +74,7 @@ public class Donation {
 	public void print(String prefix, String suffix) {
 		System.out.println("---------------------------------------");
 		System.out.printf("%sDonation: %s%s\n", prefix, this.name, suffix);
-		System.out.printf("%sProgress: %.2f/%.2f(%.2f%%)%s\n", prefix, this.collected, this.goal, this.collected / this.goal * 100.0f, suffix);
+		System.out.printf("%sProgress: %.2f$/%.2f$(%.2f%%)%s\n", prefix, this.collected, this.goal, this.collected / this.goal * 100.0f, suffix);
 		
 		System.out.printf("%sDonors: %d%s\n", prefix, this.donors.size(), suffix);
 		for(int i = 0; i < this.donors.size(); ++i) {
@@ -104,27 +122,28 @@ public class Donation {
 		}
 		return result;
 	}
-	public ArrayList<Person> searchByDonor(String name) {
-		ArrayList<Person> result = new ArrayList<Person>();
+	public ArrayList<Donor> searchByDonor(String name) {
+		ArrayList<Donor> result = new ArrayList<Donor>();
 		for(int i = 0; i < this.donors.size(); ++i) {
 			Donor donor = this.donors.get(i);
 			if(donor.stringRepresentation() == "Company") {
-				Person person = donor.getPerson(name);
-				if(person.getDonated() != 0) {
+				Company company = (Company) donor;
+				Employee employee = company.getEmployee(name);
+				if(employee.getDonated() > 0) {
 					boolean check = false;
 					for(int j = 0; j < result.size(); ++j) {
 						if(result.get(i).getName() == name) {
-							result.get(i).setDonated(result.get(i).getDonated() + person.getDonated());
+							result.get(i).setDonated(result.get(i).getDonated() + employee.getDonated());
 							check = true;
 							break;
 						}
 					}
 					if(!check) {
-						result.add(person);
+						result.add(donor);
 					}
 				}
 			} else {
-				result.add(new Person(donor.getName(), donor.getDonated()));
+				result.add(new Donor(donor.getName(), donor.getDonated()));
 			}
 		}
 		return result;
