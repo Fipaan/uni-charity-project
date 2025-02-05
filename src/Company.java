@@ -12,6 +12,7 @@ public class Company extends Donor {
 		this.employees.addAll(employees);
 	}
 	public void addEmployee(Employee employee) {
+		super.donate(employee.getDonated());
 		this.employees.add(employee);
 	}
 	public Company(String name, float donated) {

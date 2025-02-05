@@ -10,7 +10,7 @@ public class Donor {
 	}
 	@Override
 	public String toString() {
-		return this.stringRepresentation() + ": " + this.name + ", donated: " + this.donated + "$";
+		return this.stringRepresentation() + ": " + this.name + ", donated: " + String.format("%.2f", this.donated) + "$";
 	}
 	@Override
 	public boolean equals(Object obj) {

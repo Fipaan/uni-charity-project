@@ -17,6 +17,21 @@ public class Main {
 			DatabaseLinker.connect();
 			charity = DatabaseLinker.get_charity(charity_name);
 			System.out.println("[INFO] Charity loaded succesfully!");
+		} catch(ClassNotFoundException e) {
+			/*
+			Charity c = new Charity(charity_name);
+			Donation d = new Donation(donation_name, 1000.0f);
+			d.addDonor(new Donor("Roman", 73.0f));
+			d.addDonor(new Donor("Misha", 22.0f));
+			Company company = new Company("My Company", 0.0f);
+			company.addEmployee(new Employee("Roman", 12.3f));
+			company.addEmployee(new Employee("Sasha", 17.92f));
+			d.addDonor(company);
+			c.addDonation(d);
+			charity = c;
+			*/
+			e.printStackTrace();
+			System.exit(1);
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -24,7 +39,7 @@ public class Main {
 	}
 	private static void save_charity(Charity charity) {
 		try {
-			DatabaseLinker.upsert_charity(charity);
+			DatabaseLinker.upsert_charity(charity);	
 			System.out.println("[INFO] Charity saved succesfully!");
 		} catch (Exception e) {
 			e.printStackTrace();
