@@ -1,3 +1,7 @@
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
 public class Main {
 	private static Charity charity;
 	public static final String donation_name = "Supporting elder people";
