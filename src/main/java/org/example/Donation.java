@@ -1,5 +1,8 @@
 package org.example;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Objects;
@@ -54,7 +57,8 @@ public class Donation {
 			}
 		}
 	}
-	public Donation(String name, float goal) {
+	@JsonCreator
+	public Donation(@JsonProperty("name") String name, @JsonProperty("goal") float goal) {
 		this.name = name;
 		this.goal = goal;
 	}

@@ -1,0 +1,21 @@
+# Get charity (GET type)
+http://localhost:8080/api/charities/get/Charity
+
+# Add Donor (POST type)
+http://localhost:8080/api/charities/post/Charity/Supporting%20elder%20people/donors
+
+{
+  "name": "Sergey",
+  "donated": 0.0
+}
+
+# Add Donation (POST type)
+http://localhost:8080/api/charities/post/Charity/donations
+
+{
+    "name": "Homeless animals",
+    "goal": 5000.0
+}
+
+# Remove Donation (DELETE type)
+http://localhost:8080/api/charities/remove/Charity/donations/Homeless%20animals
